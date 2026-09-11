@@ -135,20 +135,6 @@ const mockMenuItems: MenuItem[] = [
     ],
   },
   {
-    id: "layout",
-    label: "Layout",
-    icon: <PanelBottom className="h-4 w-4" />,
-    isExpanded: true,
-    children: [
-      {
-        id: "center-only-bottom",
-        label: "Bottom panel under center only",
-        isChecked: false,
-        onClick: () => console.log("Center-only bottom panel toggled"),
-      },
-    ],
-  },
-  {
     id: "hidden-item",
     label: "This should be hidden",
     isVisible: false,
@@ -261,7 +247,6 @@ export default function VisualNovelEditor() {
   const [leftPanelWidth, setLeftPanelWidth] = useState(300)
   const [rightPanelWidth, setRightPanelWidth] = useState(300)
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200)
-  const [centerOnlyBottomPanel, setCenterOnlyBottomPanel] = useState(false)
 
   // Track when panels are transitioning to enable/disable transitions
   const [leftPanelTransitioning, setLeftPanelTransitioning] = useState(false)
@@ -312,22 +297,6 @@ export default function VisualNovelEditor() {
   }
 
   const handleMenuItemClick = (item: MenuItem) => {
-    if (item.id === "center-only-bottom") {
-      setCenterOnlyBottomPanel((current) => !current)
-      setMenuItems((items) =>
-        items.map((menuItem) =>
-          menuItem.id === "layout"
-            ? {
-                ...menuItem,
-                children: menuItem.children?.map((child) =>
-                  child.id === "center-only-bottom" ? { ...child, isChecked: !centerOnlyBottomPanel } : child,
-                ),
-              }
-            : menuItem,
-        ),
-      )
-      return
-    }
     console.log("Menu item clicked:", item.label)
   }
 
@@ -376,22 +345,16 @@ export default function VisualNovelEditor() {
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Top Section - Left, Main, Right Panels */}
         <div
-          className="flex-1 min-h-0 overflow-hidden"
+          className="flex flex-1 min-h-0 overflow-hidden"
           style={{
-            display: "grid",
-            gridTemplateColumns: `${leftPanelVisible ? `${leftPanelWidth}px` : "0px"} minmax(0, 1fr) ${rightPanelVisible ? `${rightPanelWidth}px` : "0px"}`,
-            gridTemplateRows: centerOnlyBottomPanel
-              ? `minmax(0, 1fr) ${bottomPanelVisible ? `${bottomPanelHeight}px` : "0px"}`
-              : "minmax(0, 1fr)",
-            transition: bottomPanelTransitioning ? `grid-template-rows ${PANEL_TRANSITION_DURATION} ease-in-out` : "none",
+            height: bottomPanelVisible ? `calc(100% - ${bottomPanelHeight}px)` : "100%",
+            transition: bottomPanelTransitioning ? `height ${PANEL_TRANSITION_DURATION} ease-in-out` : "none",
           }}
         >
           {/* Left Panel - Node Tree */}
           <div
-            className="bg-muted/30 border-r overflow-hidden min-w-0"
+            className="bg-muted/30 border-r overflow-hidden flex-shrink-0"
             style={{
-              gridColumn: 1,
-              gridRow: centerOnlyBottomPanel ? "1 / 3" : "1",
               width: leftPanelVisible ? `${leftPanelWidth}px` : "0px",
               transition: leftPanelTransitioning ? `width ${PANEL_TRANSITION_DURATION} ease-in-out` : "none",
             }}
@@ -429,10 +392,7 @@ export default function VisualNovelEditor() {
           </div>
 
           {/* Main Panel */}
-          <div
-            className="flex min-w-0 flex-col relative overflow-hidden"
-            style={{ gridColumn: 2, gridRow: 1 }}
-          >
+          <div className="flex-1 flex flex-col relative min-w-0 overflow-hidden">
             <div className="h-full flex flex-col p-4">
               {/* Action Buttons */}
               {selectedNode && selectedNode.actions.length > 0 && (
@@ -476,10 +436,8 @@ export default function VisualNovelEditor() {
 
           {/* Right Panel - Info */}
           <div
-            className="bg-muted/30 border-l overflow-hidden min-w-0"
+            className="bg-muted/30 border-l overflow-hidden flex-shrink-0"
             style={{
-              gridColumn: 3,
-              gridRow: centerOnlyBottomPanel ? "1 / 3" : "1",
               width: rightPanelVisible ? `${rightPanelWidth}px` : "0px",
               transition: rightPanelTransitioning ? `width ${PANEL_TRANSITION_DURATION} ease-in-out` : "none",
             }}
@@ -521,13 +479,12 @@ export default function VisualNovelEditor() {
               </ResizablePanel>
             </div>
           </div>
+        </div>
 
-        {/* Bottom Panel - Object Properties */}
+        {/* Bottom Panel - Object Properties (Full Width) */}
         <div
-          className="bg-muted/30 border-t overflow-hidden min-h-0"
+          className="bg-muted/30 border-t overflow-hidden flex-shrink-0"
           style={{
-            gridColumn: centerOnlyBottomPanel ? 2 : "1 / -1",
-            gridRow: centerOnlyBottomPanel ? 2 : 2,
             height: bottomPanelVisible ? `${bottomPanelHeight}px` : "0px",
             transition: bottomPanelTransitioning ? `height ${PANEL_TRANSITION_DURATION} ease-in-out` : "none",
           }}
@@ -564,7 +521,6 @@ export default function VisualNovelEditor() {
               </div>
             </ResizablePanel>
           </div>
-        </div>
         </div>
       </div>
     </div>
