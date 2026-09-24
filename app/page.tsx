@@ -22,6 +22,14 @@ import { HamburgerMenu } from "@/components/hamburger-menu"
 import { useCanvasAnimation } from "@/hooks/use-canvas-animation"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 // Animation duration constant
 const PANEL_TRANSITION_DURATION = "300ms"
@@ -244,6 +252,8 @@ export default function VisualNovelEditor() {
   const [leftPanelVisible, setLeftPanelVisible] = useState(true)
   const [rightPanelVisible, setRightPanelVisible] = useState(true)
   const [bottomPanelVisible, setBottomPanelVisible] = useState(true)
+  const [bottomPanelBetweenSidePanes, setBottomPanelBetweenSidePanes] = useState(false)
+  const [preferencesOpen, setPreferencesOpen] = useState(false)
   const [leftPanelWidth, setLeftPanelWidth] = useState(300)
   const [rightPanelWidth, setRightPanelWidth] = useState(300)
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200)
@@ -297,6 +307,11 @@ export default function VisualNovelEditor() {
   }
 
   const handleMenuItemClick = (item: MenuItem) => {
+    if (item.id === "preferences") {
+      setPreferencesOpen(true)
+      return
+    }
+
     console.log("Menu item clicked:", item.label)
   }
 
@@ -342,19 +357,37 @@ export default function VisualNovelEditor() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div
+        className="flex-1 min-h-0 overflow-hidden"
+        style={
+          bottomPanelBetweenSidePanes
+            ? {
+                display: "grid",
+                gridTemplateColumns: `${leftPanelVisible ? leftPanelWidth : 0}px minmax(0, 1fr) ${rightPanelVisible ? rightPanelWidth : 0}px`,
+                gridTemplateRows: `minmax(0, 1fr) ${bottomPanelVisible ? bottomPanelHeight : 0}px`,
+                gridTemplateAreas: `"left main right" "left bottom right"`,
+              }
+            : undefined
+        }
+      >
         {/* Top Section - Left, Main, Right Panels */}
         <div
-          className="flex flex-1 min-h-0 overflow-hidden"
-          style={{
-            height: bottomPanelVisible ? `calc(100% - ${bottomPanelHeight}px)` : "100%",
-            transition: bottomPanelTransitioning ? `height ${PANEL_TRANSITION_DURATION} ease-in-out` : "none",
-          }}
+          className={bottomPanelBetweenSidePanes ? "contents" : "flex flex-1 min-h-0 overflow-hidden"}
+          style={
+            bottomPanelBetweenSidePanes
+              ? undefined
+              : {
+                  height: bottomPanelVisible ? `calc(100% - ${bottomPanelHeight}px)` : "100%",
+                  transition: bottomPanelTransitioning ? `height ${PANEL_TRANSITION_DURATION} ease-in-out` : "none",
+                }
+          }
         >
           {/* Left Panel - Node Tree */}
           <div
             className="bg-muted/30 border-r overflow-hidden flex-shrink-0"
             style={{
+              gridArea: "left",
+
               width: leftPanelVisible ? `${leftPanelWidth}px` : "0px",
               transition: leftPanelTransitioning ? `width ${PANEL_TRANSITION_DURATION} ease-in-out` : "none",
             }}
@@ -392,7 +425,7 @@ export default function VisualNovelEditor() {
           </div>
 
           {/* Main Panel */}
-          <div className="flex-1 flex flex-col relative min-w-0 overflow-hidden">
+          <div className="flex-1 flex flex-col relative min-w-0 overflow-hidden" style={bottomPanelBetweenSidePanes ? { gridArea: "main" } : undefined}>
             <div className="h-full flex flex-col p-4">
               {/* Action Buttons */}
               {selectedNode && selectedNode.actions.length > 0 && (
@@ -438,6 +471,8 @@ export default function VisualNovelEditor() {
           <div
             className="bg-muted/30 border-l overflow-hidden flex-shrink-0"
             style={{
+              gridArea: "right",
+
               width: rightPanelVisible ? `${rightPanelWidth}px` : "0px",
               transition: rightPanelTransitioning ? `width ${PANEL_TRANSITION_DURATION} ease-in-out` : "none",
             }}
@@ -485,7 +520,15 @@ export default function VisualNovelEditor() {
         <div
           className="bg-muted/30 border-t overflow-hidden flex-shrink-0"
           style={{
-            height: bottomPanelVisible ? `${bottomPanelHeight}px` : "0px",
+            gridArea: bottomPanelBetweenSidePanes ? "bottom" : undefined,
+            gridColumn: bottomPanelBetweenSidePanes ? "2" : undefined,
+            height: bottomPanelBetweenSidePanes
+              ? bottomPanelVisible
+                ? `${bottomPanelHeight}px`
+                : "0px"
+              : bottomPanelVisible
+                ? `${bottomPanelHeight}px`
+                : "0px",
             transition: bottomPanelTransitioning ? `height ${PANEL_TRANSITION_DURATION} ease-in-out` : "none",
           }}
         >
@@ -523,6 +566,32 @@ export default function VisualNovelEditor() {
           </div>
         </div>
       </div>
+
+      <Dialog open={preferencesOpen} onOpenChange={setPreferencesOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Preferences</DialogTitle>
+            <DialogDescription>Customize how the editor panels are arranged.</DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="bottom-panel-position" className="text-sm font-medium">
+                Place bottom pane between side panes
+              </label>
+              <p className="text-sm text-muted-foreground">
+                Keep the side panes full height and place the properties pane below the preview.
+              </p>
+            </div>
+            <Switch
+              id="bottom-panel-position"
+              checked={bottomPanelBetweenSidePanes}
+              onCheckedChange={setBottomPanelBetweenSidePanes}
+              aria-label="Place bottom pane between side panes"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
